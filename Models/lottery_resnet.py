@@ -134,6 +134,10 @@ def resnet44(input_shape, num_classes, dense_classifier=False, pretrained=False)
     plan = _plan(44, 16)
     return _resnet('resnet44', plan, num_classes, dense_classifier, pretrained)
 
+def resnet50(input_shape, num_classes, dense_classifier=False, pretrained=False):
+    plan = _plan(50, 16)
+    return _resnet('resnet50', plan, num_classes, dense_classifier, pretrained)
+
 def resnet56(input_shape, num_classes, dense_classifier=False, pretrained=False):
     plan = _plan(56, 16)
     return _resnet('resnet56', plan, num_classes, dense_classifier, pretrained)
@@ -159,6 +163,10 @@ def wide_resnet44(input_shape, num_classes, dense_classifier=False, pretrained=F
     plan = _plan(44, 32)
     return _resnet('wide_resnet44', plan, num_classes, dense_classifier, pretrained)
 
+def wide_resnet50(input_shape, num_classes, dense_classifier=False, pretrained=False):
+    plan = _plan(50, 32)
+    return _resnet('wide_resnet50', plan, num_classes, dense_classifier, pretrained)
+
 def wide_resnet56(input_shape, num_classes, dense_classifier=False, pretrained=False):
     plan = _plan(56, 32)
     return _resnet('wide_resnet56', plan, num_classes, dense_classifier, pretrained)
@@ -170,3 +178,32 @@ def wide_resnet110(input_shape, num_classes, dense_classifier=False, pretrained=
 def wide_resnet1202(input_shape, num_classes, dense_classifier=False, pretrained=False):
     plan = _plan(1202, 32)
     return _resnet('wide_resnet1202', plan, num_classes, dense_classifier, pretrained)
+
+# very wide ResNet models
+def verywide_resnet20(input_shape, num_classes, dense_classifier=False, pretrained=False):
+    plan = _plan(20, 64)
+    return _resnet('verywide_resnet20', plan, num_classes, dense_classifier, pretrained)
+
+def verywide_resnet32(input_shape, num_classes, dense_classifier=False, pretrained=False):
+    plan = _plan(32, 64)
+    return _resnet('verywide_resnet32', plan, num_classes, dense_classifier, pretrained)
+
+def verywide_resnet44(input_shape, num_classes, dense_classifier=False, pretrained=False):
+    plan = _plan(44, 64)
+    return _resnet('verywide_resnet44', plan, num_classes, dense_classifier, pretrained)
+
+def verywide_resnet50(input_shape, num_classes, dense_classifier=False, pretrained=False):
+    plan = _plan(50, 64)
+    return _resnet('verywide_resnet50', plan, num_classes, dense_classifier, pretrained)
+
+def verywide_resnet56(input_shape, num_classes, dense_classifier=False, pretrained=False):
+    plan = _plan(56, 64)
+    return _resnet('verywide_resnet56', plan, num_classes, dense_classifier, pretrained)
+
+def verywide_resnet110(input_shape, num_classes, dense_classifier=False, pretrained=False):
+    plan = _plan(110, 64)
+    return _resnet('verywide_resnet110', plan, num_classes, dense_classifier, pretrained)
+
+def verywide_resnet1202(input_shape, num_classes, dense_classifier=False, pretrained=False):
+    plan = _plan(1202, 64)
+    return _resnet('verywide_resnet1202', plan, num_classes, dense_classifier, pretrained)

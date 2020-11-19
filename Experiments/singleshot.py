@@ -16,8 +16,8 @@ def run(args):
     ## Data ##
     print('Loading {} dataset.'.format(args.dataset))
     input_shape, num_classes = load.dimension(args.dataset) 
-    prune_loader = load.dataloader(args.dataset, args.prune_batch_size, True, args.workers, args.prune_dataset_ratio * num_classes)
-    train_loader = load.dataloader(args.dataset, args.train_batch_size, True, args.workers)
+    prune_loader = load.dataloader(args.dataset, args.prune_batch_size, True, args.workers, corrupt_prob=args.prune_corrupt, length=args.prune_dataset_ratio * num_classes)
+    train_loader = load.dataloader(args.dataset, args.train_batch_size, True, args.workers, corrupt_prob=args.train_corrupt)
     test_loader = load.dataloader(args.dataset, args.test_batch_size, False, args.workers)
 
     ## Model, Loss, Optimizer ##
@@ -30,6 +30,7 @@ def run(args):
     opt_class, opt_kwargs = load.optimizer(args.optimizer)
     optimizer = opt_class(generator.parameters(model), lr=args.lr, weight_decay=args.weight_decay, **opt_kwargs)
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=args.lr_drops, gamma=args.lr_drop_rate)
+    torch.save(model.state_dict(),"{}/init-model.pt".format(args.result_dir))
 
 
     ## Pre-Train ##
@@ -38,12 +39,14 @@ def run(args):
                                  test_loader, device, args.pre_epochs, args.verbose)
 
     ## Prune ##
+    model.double() # to address exploding/vanishing gradients in SynFlow for deep models
     print('Pruning with {} for {} epochs.'.format(args.pruner, args.prune_epochs))
     pruner = load.pruner(args.pruner)(generator.masked_parameters(model, args.prune_bias, args.prune_batchnorm, args.prune_residual))
     sparsity = 10**(-float(args.compression))
     prune_loop(model, loss, pruner, prune_loader, device, sparsity, 
                args.compression_schedule, args.mask_scope, args.prune_epochs, args.reinitialize, args.prune_train_mode, args.shuffle, args.invert)
-
+    model.float() # to address exploding/vanishing gradients in SynFlow for deep models
+    torch.save(model.state_dict(),"{}/post-prune-model.pt".format(args.result_dir))
     
     ## Post-Train ##
     print('Post-Training for {} epochs.'.format(args.post_epochs))
@@ -72,7 +75,7 @@ def run(args):
         pre_result.to_pickle("{}/pre-train.pkl".format(args.result_dir))
         post_result.to_pickle("{}/post-train.pkl".format(args.result_dir))
         prune_result.to_pickle("{}/compression.pkl".format(args.result_dir))
-        torch.save(model.state_dict(),"{}/model.pt".format(args.result_dir))
+        torch.save(model.state_dict(),"{}/post-train-model.pt".format(args.result_dir))
         torch.save(optimizer.state_dict(),"{}/optimizer.pt".format(args.result_dir))
         torch.save(scheduler.state_dict(),"{}/scheduler.pt".format(args.result_dir))
 

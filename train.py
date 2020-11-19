@@ -43,15 +43,20 @@ def eval(model, loss, dataloader, device, verbose):
     return average_loss, accuracy1, accuracy5
 
 def train_eval_loop(model, loss, optimizer, scheduler, train_loader, test_loader, device, epochs, verbose):
+    train_loss, train_accuracy1, train_accuracy5 = eval(model, loss, train_loader, device, verbose)
     test_loss, accuracy1, accuracy5 = eval(model, loss, test_loader, device, verbose)
-    rows = [[np.nan, test_loss, accuracy1, accuracy5]]
+    rows = [[np.nan, train_loss, train_accuracy1, train_accuracy5, test_loss, accuracy1, accuracy5]]
     for epoch in tqdm(range(epochs)):
-        train_loss = train(model, loss, optimizer, train_loader, device, epoch, verbose)
+        train_loss_trainmode = train(model, loss, optimizer, train_loader, device, epoch, verbose)
+        
+        train_loss, train_accuracy1, train_accuracy5 = eval(model, loss, train_loader, device, verbose)
         test_loss, accuracy1, accuracy5 = eval(model, loss, test_loader, device, verbose)
-        row = [train_loss, test_loss, accuracy1, accuracy5]
+        
+        row = [train_loss_trainmode, train_loss, train_accuracy1, train_accuracy5, test_loss, accuracy1, accuracy5]
+        
         scheduler.step()
         rows.append(row)
-    columns = ['train_loss', 'test_loss', 'top1_accuracy', 'top5_accuracy']
+    columns = ['train_loss_trainmode', 'train_loss', 'train_top1', 'train_top5', 'test_loss', 'test_top1', 'test_top5']
     return pd.DataFrame(rows, columns=columns)
 
 

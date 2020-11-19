@@ -11,6 +11,7 @@ from Models import imagenet_vgg
 from Models import imagenet_resnet
 from Pruners import pruners
 from Utils import custom_datasets
+from torch.utils.data import TensorDataset
 
 def device(gpu):
     use_cuda = torch.cuda.is_available()
@@ -38,7 +39,7 @@ def get_transform(size, padding, mean, std, preprocess):
     transform.append(transforms.Normalize(mean, std))
     return transforms.Compose(transform)
 
-def dataloader(dataset, batch_size, train, workers, length=None):
+def dataloader(dataset, batch_size, train, workers, corrupt_prob=0.0, length=None):
     # Dataset
     if dataset == 'mnist':
         mean, std = (0.1307,), (0.3081,)
@@ -75,6 +76,21 @@ def dataloader(dataset, batch_size, train, workers, length=None):
         folder = 'Data/imagenet_raw/{}'.format('train' if train else 'val')
         dataset = datasets.ImageFolder(folder, transform=transform)
     
+    # corrupt labels as needed
+    # only supports 10-class datasets for now
+    if corrupt_prob > 0.0:
+        full_loader = torch.utils.data.DataLoader(dataset, batch_size=200000, shuffle=False)
+        for batch in full_loader:
+            images, labels = batch
+            
+        mask = torch.empty(labels.shape).fill_(corrupt_prob)
+        mask = torch.bernoulli(mask).bool()
+
+        n_mask = torch.sum(mask)
+        print("Number of labels being corrupted", n_mask)
+        labels[mask] = torch.randint(10, (n_mask,))
+        dataset = TensorDataset(images, labels)
+    
     # Dataloader
     use_cuda = torch.cuda.is_available()
     kwargs = {'num_workers': workers, 'pin_memory': True} if use_cuda else {}
@@ -107,15 +123,24 @@ def model(model_architecture, model_class):
         'resnet20': lottery_resnet.resnet20,
         'resnet32': lottery_resnet.resnet32,
         'resnet44': lottery_resnet.resnet44,
+        'resnet50': lottery_resnet.resnet50,
         'resnet56': lottery_resnet.resnet56,
         'resnet110': lottery_resnet.resnet110,
         'resnet1202': lottery_resnet.resnet1202,
         'wide-resnet20': lottery_resnet.wide_resnet20,
         'wide-resnet32': lottery_resnet.wide_resnet32,
         'wide-resnet44': lottery_resnet.wide_resnet44,
+        'wide-resnet50': lottery_resnet.wide_resnet50,
         'wide-resnet56': lottery_resnet.wide_resnet56,
         'wide-resnet110': lottery_resnet.wide_resnet110,
-        'wide-resnet1202': lottery_resnet.wide_resnet1202
+        'wide-resnet1202': lottery_resnet.wide_resnet1202,
+        'verywide-resnet20': lottery_resnet.verywide_resnet20,
+        'verywide-resnet32': lottery_resnet.verywide_resnet32,
+        'verywide-resnet44': lottery_resnet.verywide_resnet44,
+        'verywide-resnet50': lottery_resnet.verywide_resnet50,
+        'verywide-resnet56': lottery_resnet.verywide_resnet56,
+        'verywide-resnet110': lottery_resnet.verywide_resnet110,
+        'verywide-resnet1202': lottery_resnet.verywide_resnet1202
     }
     tinyimagenet_models = {
         'vgg11' : tinyimagenet_vgg.vgg11,
@@ -178,7 +203,7 @@ def optimizer(optimizer):
     optimizers = {
         'adam' : (optim.Adam, {}),
         'sgd' : (optim.SGD, {}),
-        'momentum' : (optim.SGD, {'momentum' : 0.9, 'nesterov' : True}),
+        'momentum' : (optim.SGD, {'momentum' : 0.9}),
         'rms' : (optim.RMSprop, {})
     }
     return optimizers[optimizer]

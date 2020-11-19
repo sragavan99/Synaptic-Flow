@@ -21,7 +21,7 @@ if __name__ == '__main__':
                         'resnet18','resnet20','resnet32','resnet34','resnet44','resnet50',
                         'resnet56','resnet101','resnet110','resnet110','resnet152','resnet1202',
                         'wide-resnet18','wide-resnet20','wide-resnet32','wide-resnet34','wide-resnet44','wide-resnet50',
-                        'wide-resnet56','wide-resnet101','wide-resnet110','wide-resnet110','wide-resnet152','wide-resnet1202'],
+                        'wide-resnet56','wide-resnet101','wide-resnet110','wide-resnet110','wide-resnet152','wide-resnet1202', 'verywide-resnet20', 'verywide-resnet32', 'verywide-resnet44', 'verywide-resnet50', 'verywide-resnet56', 'verywide-resnet110', 'verywide-resnet1202'],
                         help='model architecture (default: fc)')
     training_args.add_argument('--model-class', type=str, default='default', choices=['default','lottery','tinyimagenet','imagenet'],
                         help='model class (default: default)')
@@ -47,6 +47,7 @@ if __name__ == '__main__':
                         help='multiplicative factor of learning rate drop (default: 0.1)')
     training_args.add_argument('--weight-decay', type=float, default=0.0,
                         help='weight decay (default: 0.0)')
+    training_args.add_argument('--train-corrupt', type=float, default=0.0, help='corruption probability of training labels')
     # Pruning Hyperparameters
     pruning_args = parser.add_argument_group('pruning')
     pruning_args.add_argument('--pruner', type=str, default='rand', 
@@ -86,6 +87,7 @@ if __name__ == '__main__':
                         help='list of compression ratio exponents for singleshot/multishot (default: [])')
     pruning_args.add_argument('--level-list', type=int, nargs='*', default=[],
                         help='list of number of prune-train cycles (levels) for multishot (default: [])')
+    pruning_args.add_argument('--prune-corrupt', type=float, default=0.0, help='corruption probability of pruning labels')
     ## Experiment Hyperparameters ##
     parser.add_argument('--experiment', type=str, default='singleshot', 
                         choices=['singleshot','multishot','unit-conservation',
