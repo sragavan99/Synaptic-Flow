@@ -200,7 +200,7 @@ class SynFlow(Pruner):
 
         (data, _) = next(iter(dataloader))
         input_dim = list(data[0,:].shape)
-        input = torch.ones([1] + input_dim).to(device)#, dtype=torch.float64).to(device)
+        input = torch.ones([1] + input_dim, dtype=torch.float64).to(device)
         output = model(input)
         torch.sum(output).backward()
         
