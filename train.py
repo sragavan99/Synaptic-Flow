@@ -14,10 +14,10 @@ def train(model, loss, optimizer, dataloader, device, epoch, verbose, log_interv
         total += train_loss.item() * data.size(0)
         train_loss.backward()
         optimizer.step()
-        if verbose & (batch_idx % log_interval == 0):
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                epoch, batch_idx * len(data), len(dataloader.dataset),
-                100. * batch_idx / len(dataloader), train_loss.item()))
+        #if verbose & (batch_idx % log_interval == 0):
+            #print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                #epoch, batch_idx * len(data), len(dataloader.dataset),
+                #100. * batch_idx / len(dataloader), train_loss.item()))
     return total / len(dataloader.dataset)
 
 def eval(model, loss, dataloader, device, verbose):
@@ -47,6 +47,7 @@ def train_eval_loop(model, loss, optimizer, scheduler, train_loader, test_loader
     test_loss, accuracy1, accuracy5 = eval(model, loss, test_loader, device, verbose)
     rows = [[np.nan, train_loss, train_accuracy1, train_accuracy5, test_loss, accuracy1, accuracy5]]
     for epoch in tqdm(range(epochs)):
+        print("Epoch", epoch)
         train_loss_trainmode = train(model, loss, optimizer, train_loader, device, epoch, verbose)
         
         train_loss, train_accuracy1, train_accuracy5 = eval(model, loss, train_loader, device, verbose)
