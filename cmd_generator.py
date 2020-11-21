@@ -24,7 +24,7 @@ for compression in range(1, 4):
 
 print('=' * 20 + ' train only ' + '=' * 20)
 
-for model in ['wide-resnet20', 'vgg16-bn']:
+for model in ['wide-resnet32', 'vgg16-bn']:
     for random_train in [True, False]:
         lr = 0.1
         result_dir = f'no-prune-{model}-{lr}-{random_train}'
