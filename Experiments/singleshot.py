@@ -5,6 +5,7 @@ import torch.nn as nn
 from Utils import load
 from Utils import generator
 from Utils import metrics
+from Utils import plot
 from train import *
 from prune import *
 
@@ -74,6 +75,7 @@ def run(args):
         print('Saving results.')
         pre_result.to_pickle("{}/pre-train.pkl".format(args.result_dir))
         post_result.to_pickle("{}/post-train.pkl".format(args.result_dir))
+        plot.get_plots(post_result, save_path="{}/plots.png".format(args.result_dir))
         prune_result.to_pickle("{}/compression.pkl".format(args.result_dir))
         torch.save(model.state_dict(),"{}/post-train-model.pt".format(args.result_dir))
         torch.save(optimizer.state_dict(),"{}/optimizer.pt".format(args.result_dir))
