@@ -4,7 +4,7 @@ BASE = "python3 main.py --dataset cifar10 --model-class lottery --optimizer mome
 
 
 # With pruning
-for compression in [1e-3, 1e-2, 1e-1]:
+for compression in range(1, 4):
     for levels in [1, 3]:
         for model in ['wide-resnet32', 'vgg16-bn']:
             for pruner in ['synflow', 'mag']:
