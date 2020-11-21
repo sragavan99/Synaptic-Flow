@@ -20,8 +20,8 @@ def run(args):
     ## Data ##
     print('Loading {} dataset.'.format(args.dataset))
     input_shape, num_classes = load.dimension(args.dataset) 
-    prune_loader = load.dataloader(args.dataset, args.prune_batch_size, True, args.workers, args.prune_dataset_ratio * num_classes)
-    train_loader = load.dataloader(args.dataset, args.train_batch_size, True, args.workers)
+    prune_loader = load.dataloader(args.dataset, args.train_batch_size, True, args.workers, corrupt_prob=args.prune_corrupt)
+    train_loader = load.dataloader(args.dataset, args.train_batch_size, True, args.workers, corrupt_prob=args.train_corrupt)
     test_loader = load.dataloader(args.dataset, args.test_batch_size, False, args.workers)
 
     ## Model ##
@@ -53,14 +53,25 @@ def run(args):
             for l in range(level):
 
                 # Pre Train Model
-                train_eval_loop(model, loss, optimizer, scheduler, train_loader, 
+                level_train_result = train_eval_loop(model, loss, optimizer, scheduler, prune_loader, 
                                 test_loader, device, args.pre_epochs, args.verbose)
-
+                level_train_result.to_pickle(f'{args.result_dir}/train-level-{l}-metrics.pkl')
+                
+                torch.save(model.state_dict(),"{}/train-level-{}.pt".format(args.result_dir, l))
+                
                 # Prune Model
                 pruner = load.pruner(args.pruner)(generator.masked_parameters(model, args.prune_bias, args.prune_batchnorm, args.prune_residual))
                 sparsity = (10**(-float(compression)))**((l + 1) / level)
                 prune_loop(model, loss, pruner, prune_loader, device, sparsity,
                            args.compression_schedule, args.mask_scope, args.prune_epochs, args.reinitialize, args.prune_train_mode, args.shuffle, args.invert)
+                
+                # Prune Result
+                prune_result = metrics.summary(model, 
+                                           pruner.scores,
+                                           metrics.flop(model, input_shape, device),
+                                           lambda p: generator.prunable(p, args.prune_batchnorm, args.prune_residual))
+                prune_result.to_pickle("{}/compression-{}-{}-{}.pkl".format(args.result_dir, args.pruner, str(compression), str(l + 1)))
+
 
                 # Reset Model's Weights
                 original_dict = torch.load("{}/model.pt".format(args.result_dir), map_location=device)
@@ -73,17 +84,16 @@ def run(args):
                 optimizer.load_state_dict(torch.load("{}/optimizer.pt".format(args.result_dir), map_location=device))
                 scheduler.load_state_dict(torch.load("{}/scheduler.pt".format(args.result_dir), map_location=device))
 
-            # Prune Result
-            prune_result = metrics.summary(model, 
-                                           pruner.scores,
-                                           metrics.flop(model, input_shape, device),
-                                           lambda p: generator.prunable(p, args.prune_batchnorm, args.prune_residual))
+
             # Train Model
             post_result = train_eval_loop(model, loss, optimizer, scheduler, train_loader, 
                                           test_loader, device, args.post_epochs, args.verbose)
             
             # Save Data
             post_result.to_pickle("{}/post-train-{}-{}-{}.pkl".format(args.result_dir, args.pruner, str(compression),  str(level)))
-            prune_result.to_pickle("{}/compression-{}-{}-{}.pkl".format(args.result_dir, args.pruner, str(compression), str(level)))
 
+            # Save final model
+            torch.save(model.state_dict(), f'{args.result_dir}/post-final-train.pt')
+            torch.save(optimizer.state_dict(), f'{args.result_dir}/optimizer.pt')
+            torch.save(scheduler.state_dict(), f'{args.result_dir}/scheduler.pt')
 
