@@ -78,7 +78,7 @@ def dataloader(dataset, batch_size, train, workers, corrupt_prob=0.0, length=Non
     
     # corrupt labels as needed
     # only supports 10-class datasets for now
-    old_seed = torch.seed()
+    # old_seed = torch.seed()
     SEED = 2
     if corrupt_prob > 0.0:
         full_loader = torch.utils.data.DataLoader(dataset, batch_size=200000, shuffle=False)
@@ -89,10 +89,10 @@ def dataloader(dataset, batch_size, train, workers, corrupt_prob=0.0, length=Non
         mask = torch.bernoulli(mask).bool()
 
         n_mask = torch.sum(mask)
-        print("Number of labels being corrupted", n_mask)
+        print("Number of labels being corrupted", n_mask.item())
         labels[mask] = torch.randint(10, (n_mask,))
         dataset = TensorDataset(images, labels)
-    torch.manual_seed(old_seed)
+    # torch.manual_seed(old_seed) (Breaks with Torch 1.4.0, not with 1.6.0)
 
     # Dataloader
     use_cuda = torch.cuda.is_available()

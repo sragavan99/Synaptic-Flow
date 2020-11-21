@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-BASE = "python3 main.py --dataset cifar10 --model-class lottery --optimizer momentum --train-batch-size 128 --post-epochs 160 --lr-drops 80 120 --weight-decay 1e-4 --expid rand_wideresnet20_nocompress --verbose"
+BASE = "python3 main.py --dataset cifar10 --model-class lottery --optimizer momentum --train-batch-size 128 --post-epochs 160 --lr-drops 80 120 --weight-decay 1e-4 --expid results --verbose"
 
 
 # With pruning
-for compression in [1e-3, 1e-2, 1e-1]:
+for compression in range(1, 4):
     for levels in [1, 3]:
         for model in ['wide-resnet32', 'vgg16-bn']:
             for pruner in ['synflow', 'mag']:
