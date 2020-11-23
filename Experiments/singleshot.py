@@ -43,7 +43,7 @@ def run(args):
     model.double() # to address exploding/vanishing gradients in SynFlow for deep models
     print('Pruning with {} for {} epochs.'.format(args.pruner, args.prune_epochs))
     pruner = load.pruner(args.pruner)(generator.masked_parameters(model, args.prune_bias, args.prune_batchnorm, args.prune_residual))
-    sparsity = 10**(-float(args.compression))
+    sparsity = args.sparsity # 10**(-float(args.compression))
     prune_loop(model, loss, pruner, prune_loader, device, sparsity, 
                args.compression_schedule, args.mask_scope, args.prune_epochs, args.reinitialize, args.prune_train_mode, args.shuffle, args.invert)
     model.float() # to address exploding/vanishing gradients in SynFlow for deep models
