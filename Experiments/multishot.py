@@ -41,13 +41,13 @@ def run(args):
     torch.save(scheduler.state_dict(),"{}/scheduler.pt".format(args.result_dir))
 
     ## Train-Prune Loop ##
-    compression = args.compression
+    sparsity = args.sparsity
     try:
         level = args.level_list[0]
     except IndexError:
         raise ValueError("'--level-list' must have size >= 1.")
     
-    print('{} compression ratio, {} train-prune levels'.format(compression, level))
+    print('{} compression ratio, {} train-prune levels'.format(sparsity, level))
     
     # Reset Model, Optimizer, and Scheduler
     model.load_state_dict(torch.load("{}/model.pt".format(args.result_dir), map_location=device))
@@ -65,7 +65,7 @@ def run(args):
         
         # Prune Model
         pruner = load.pruner(args.pruner)(generator.masked_parameters(model, args.prune_bias, args.prune_batchnorm, args.prune_residual))
-        sparsity = (10**(-float(compression)))**((l + 1) / level)
+        #sparsity = (10**(-float(compression)))**((l + 1) / level)
         prune_loop(model, loss, pruner, prune_loader, device, sparsity,
                     args.compression_schedule, args.mask_scope, args.prune_epochs, args.reinitialize, args.prune_train_mode, args.shuffle, args.invert)
         
@@ -74,7 +74,7 @@ def run(args):
                                     pruner.scores,
                                     metrics.flop(model, input_shape, device),
                                     lambda p: generator.prunable(p, args.prune_batchnorm, args.prune_residual))
-        prune_result.to_pickle("{}/compression-{}-{}-{}.pkl".format(args.result_dir, args.pruner, str(compression), str(l + 1)))
+        prune_result.to_pickle("{}/sparsity-{}-{}-{}.pkl".format(args.result_dir, args.pruner, str(sparsity), str(l + 1)))
 
 
         # Reset Model's Weights
@@ -94,7 +94,7 @@ def run(args):
                                     test_loader, device, args.post_epochs, args.verbose)
     
     # Save Data
-    post_result.to_pickle("{}/post-train-{}-{}-{}.pkl".format(args.result_dir, args.pruner, str(compression),  str(level)))
+    post_result.to_pickle("{}/post-train-{}-{}-{}.pkl".format(args.result_dir, args.pruner, str(sparsity),  str(level)))
 
     # Save final model
     torch.save(model.state_dict(), f'{args.result_dir}/post-final-train.pt')
