@@ -33,14 +33,19 @@ class ConvBNModule(nn.Module):
 class VGG(nn.Module):
     """A VGG-style neural network designed for CIFAR-10."""
 
-    def __init__(self, plan, conv, num_classes=10, dense_classifier=False):
+    def __init__(self, plan, conv, num_classes=10, dense_classifier=False, path=False):
         super(VGG, self).__init__()
         layer_list = []
         filters = 3
 
+        self.path = path
+
         for spec in plan:
             if spec == 'M':
-                layer_list.append(nn.MaxPool2d(kernel_size=2, stride=2))
+                if self.path:
+                    layer_list.append(nn.LPPool2d(1.0, kernel_size=2, stride=2))
+                else:
+                    layer_list.append(nn.MaxPool2d(kernel_size=2, stride=2))
             else:
                 layer_list.append(conv(filters, spec))
                 filters = spec
@@ -55,7 +60,10 @@ class VGG(nn.Module):
 
     def forward(self, x):
         x = self.layers(x)
-        x = nn.AvgPool2d(2)(x)
+        if self.path:
+            x = nn.LPPool2d(1.0, kernel_size=2)(x)
+        else:
+            x = nn.AvgPool2d(2)(x)
         x = x.view(x.size(0), -1)
         x = self.fc(x)
         return x
@@ -83,8 +91,8 @@ def _plan(num):
         raise ValueError('Unknown VGG model: {}'.format(num))
     return plan
 
-def _vgg(arch, plan, conv, num_classes, dense_classifier, pretrained):
-    model = VGG(plan, conv, num_classes, dense_classifier)
+def _vgg(arch, plan, conv, num_classes, dense_classifier, pretrained, path=False):
+    model = VGG(plan, conv, num_classes, dense_classifier, path=path)
     if pretrained:
         pretrained_path = 'Models/pretrained/{}-lottery.pt'.format(arch)
         pretrained_dict = torch.load(pretrained_path)
@@ -116,6 +124,10 @@ def vgg16(input_shape, num_classes, dense_classifier=False, pretrained=False):
 def vgg16_bn(input_shape, num_classes, dense_classifier=False, pretrained=False):
     plan = _plan(16)
     return _vgg('vgg16_bn', plan, ConvBNModule, num_classes, dense_classifier, pretrained)
+
+def path_vgg16_bn(input_shape, num_classes, dense_classifier=False, pretrained=False):
+    plan = _plan(16)
+    return _vgg('vgg16_bn', plan, ConvBNModule, num_classes, dense_classifier, pretrained, path=True)
 
 def vgg19(input_shape, num_classes, dense_classifier=False, pretrained=False):
     plan = _plan(19)

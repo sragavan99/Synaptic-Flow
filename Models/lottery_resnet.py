@@ -41,13 +41,14 @@ class Block(nn.Module):
 class ResNet(nn.Module):
     """A residual neural network as originally designed for CIFAR-10."""
     
-    def __init__(self, plan, num_classes, dense_classifier):
+    def __init__(self, plan, num_classes, dense_classifier, path=False):
         super(ResNet, self).__init__()
 
         # Initial convolution.
         current_filters = plan[0][0]
         self.conv = layers.Conv2d(3, current_filters, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn = layers.BatchNorm2d(current_filters)
+        self.path = path
 
         # The subsequent blocks of the ResNet.
         blocks = []
@@ -69,7 +70,10 @@ class ResNet(nn.Module):
     def forward(self, x):
         out = F.relu(self.bn(self.conv(x)))
         out = self.blocks(out)
-        out = F.avg_pool2d(out, out.size()[3])
+        if self.path:
+            out = nn.LPPool2d(1.0, out.size()[3])(out)
+        else:
+            out = F.avg_pool2d(out, out.size()[3])
         out = out.view(out.size(0), -1)
         out = self.fc(out)
         return out
@@ -110,8 +114,8 @@ def _plan(D, W):
 
     return plan
 
-def _resnet(arch, plan, num_classes, dense_classifier, pretrained):
-    model = ResNet(plan, num_classes, dense_classifier)
+def _resnet(arch, plan, num_classes, dense_classifier, pretrained, path=False):
+    model = ResNet(plan, num_classes, dense_classifier, path)
     if pretrained:
         pretrained_path = 'Models/pretrained/{}-lottery.pt'.format(arch)
         pretrained_dict = torch.load(pretrained_path)
@@ -158,6 +162,10 @@ def wide_resnet20(input_shape, num_classes, dense_classifier=False, pretrained=F
 def wide_resnet32(input_shape, num_classes, dense_classifier=False, pretrained=False):
     plan = _plan(32, 32)
     return _resnet('wide_resnet32', plan, num_classes, dense_classifier, pretrained)
+
+def path_wide_resnet32(input_shape, num_classes, dense_classifier=False, pretrained=False):
+    plan = _plan(32, 32)
+    return _resnet('wide_resnet32', plan, num_classes, dense_classifier, pretrained, True)
 
 def wide_resnet44(input_shape, num_classes, dense_classifier=False, pretrained=False):
     plan = _plan(44, 32)
