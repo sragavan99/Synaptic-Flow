@@ -13,8 +13,11 @@ from Pruners import pruners
 from Utils import custom_datasets
 from torch.utils.data import TensorDataset
 
-def device(gpu):
+def device(gpu, seed):
     use_cuda = torch.cuda.is_available()
+    if use_cuda:
+        torch.cuda.manual_seed_all(seed)
+        torch.backends.cudnn.deterministic = True
     return torch.device(("cuda:" + str(gpu)) if use_cuda else "cpu")
 
 def dimension(dataset):

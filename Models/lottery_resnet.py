@@ -165,7 +165,7 @@ def wide_resnet32(input_shape, num_classes, dense_classifier=False, pretrained=F
 
 def path_wide_resnet32(input_shape, num_classes, dense_classifier=False, pretrained=False):
     plan = _plan(32, 32)
-    return _resnet('wide_resnet32', plan, num_classes, dense_classifier, pretrained, True)
+    return _resnet('wide_resnet32', plan, num_classes, dense_classifier, pretrained, path=True)
 
 def wide_resnet44(input_shape, num_classes, dense_classifier=False, pretrained=False):
     plan = _plan(44, 32)

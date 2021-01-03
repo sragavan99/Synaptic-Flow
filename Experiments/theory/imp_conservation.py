@@ -16,7 +16,7 @@ def run(args):
 
     ## Random Seed and Device ##
     torch.manual_seed(args.seed)
-    device = load.device(args.gpu)
+    device = load.device(args.gpu, args.seed)
 
     ## Data ##
     input_shape, num_classes = load.dimension(args.dataset) 

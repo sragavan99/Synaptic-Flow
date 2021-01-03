@@ -12,7 +12,7 @@ from prune import *
 def run(args):
     ## Random Seed and Device ##
     torch.manual_seed(args.seed)
-    device = load.device(args.gpu)
+    device = load.device(args.gpu, args.seed)
 
     ## Data ##
     print('Loading {} dataset.'.format(args.dataset))
