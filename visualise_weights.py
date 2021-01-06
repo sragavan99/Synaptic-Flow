@@ -29,7 +29,7 @@ def visualise_surviving_weights(wgt_mdl, mask_mdl=None, rescale=False, bins=50, 
                 flat_wgt = flat_wgt[flat_mask]
 
             if layerwise:
-                print(name, flat_wgt.shape)
+                print(name, flat_wgt.numel(), param.numel())
                 plt.hist(flat_wgt.detach().cpu().numpy(), bins=bins)
                 plt.show()
                 print("-----")
