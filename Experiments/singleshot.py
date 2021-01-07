@@ -8,6 +8,7 @@ from Utils import metrics
 from Utils import plot
 from train import *
 from prune import *
+from path_counting import get_path_count
 
 def run(args):
     ## Random Seed and Device ##
@@ -40,16 +41,19 @@ def run(args):
                                  test_loader, device, args.pre_epochs, args.verbose)
 
     ## Prune ##
-    if args.pruner == "synflow":
+    if args.pruner in ["synflow", "altsynflow", "synflowmag"]:
         model.double() # to address exploding/vanishing gradients in SynFlow for deep models
     print('Pruning with {} for {} epochs.'.format(args.pruner, args.prune_epochs))
     pruner = load.pruner(args.pruner)(generator.masked_parameters(model, args.prune_bias, args.prune_batchnorm, args.prune_residual))
     sparsity = args.sparsity # 10**(-float(args.compression))
     prune_loop(model, loss, pruner, prune_loader, device, sparsity, 
                args.compression_schedule, args.mask_scope, args.prune_epochs, args.reinitialize, args.prune_train_mode, args.shuffle, args.invert)
-    if args.pruner == "synflow":
+    if args.pruner in ["synflow", "altsynflow", "synflowmag"]:
         model.float() # to address exploding/vanishing gradients in SynFlow for deep models
     torch.save(model.state_dict(),"{}/post-prune-model.pt".format(args.result_dir))
+
+    ## Compute Path Count ##
+    print("Number of paths", get_path_count(mdl=model, arch=args.model))
     
     ## Post-Train ##
     print('Post-Training for {} epochs.'.format(args.post_epochs))

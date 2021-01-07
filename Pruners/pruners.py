@@ -2,8 +2,11 @@ import torch
 import numpy as np
 
 class Pruner:
-    def __init__(self, masked_parameters):
-        self.masked_parameters = list(masked_parameters)
+    def __init__(self, masked_parameters, clone=True):
+        if clone:
+            self.masked_parameters = list(masked_parameters)
+        else:
+            self.masked_parameters = masked_parameters
         self.scores = {}
 
     def score(self, model, loss, dataloader, device):
@@ -22,6 +25,7 @@ class Pruner:
         k = int((1.0 - sparsity) * global_scores.numel())
         if not k < 1:
             threshold, _ = torch.kthvalue(global_scores, k)
+            # print(global_scores.min(), global_scores.max(), threshold)
             for mask, param in self.masked_parameters:
                 score = self.scores[id(param)] 
                 zero = torch.tensor([0.]).to(mask.device)
@@ -81,10 +85,32 @@ class Pruner:
              total_params += mask.numel()
         return remaining_params, total_params
 
+# alternates between using the scores of two different pruners
+# starts with pruner1
+class AlternatingPruner(Pruner):
+    def __init__(self, masked_parameters, pruner1, pruner2):
+        mp = list(masked_parameters)
+        super(AlternatingPruner, self).__init__(mp, clone=False)
+        self.pruner1 = pruner1(mp, clone=False)
+        self.pruner2 = pruner2(mp, clone=False)
+        self.use1 = True
+
+    def score(self, model, loss, dataloader, device):
+        if self.use1:
+            pruner = self.pruner1
+        else:
+            pruner = self.pruner2
+
+        pruner.score(model, loss, dataloader, device)
+        for _, p in self.masked_parameters:
+            self.scores[id(p)] = pruner.scores[id(p)]
+
+        self.use1 = not self.use1
+
 
 class Rand(Pruner):
-    def __init__(self, masked_parameters):
-        super(Rand, self).__init__(masked_parameters)
+    def __init__(self, masked_parameters, clone=True):
+        super(Rand, self).__init__(masked_parameters, clone=clone)
 
     def score(self, model, loss, dataloader, device):
         for _, p in self.masked_parameters:
@@ -92,8 +118,8 @@ class Rand(Pruner):
 
 
 class Mag(Pruner):
-    def __init__(self, masked_parameters):
-        super(Mag, self).__init__(masked_parameters)
+    def __init__(self, masked_parameters, clone=True):
+        super(Mag, self).__init__(masked_parameters, clone=clone)
     
     def score(self, model, loss, dataloader, device):
         for _, p in self.masked_parameters:
@@ -102,8 +128,8 @@ class Mag(Pruner):
 
 # Based on https://github.com/mi-lad/snip/blob/master/snip.py#L18
 class SNIP(Pruner):
-    def __init__(self, masked_parameters):
-        super(SNIP, self).__init__(masked_parameters)
+    def __init__(self, masked_parameters, clone=True):
+        super(SNIP, self).__init__(masked_parameters, clone=clone)
 
     def score(self, model, loss, dataloader, device):
 
@@ -133,8 +159,8 @@ class SNIP(Pruner):
 
 # Based on https://github.com/alecwangcq/GraSP/blob/master/pruner/GraSP.py#L49
 class GraSP(Pruner):
-    def __init__(self, masked_parameters):
-        super(GraSP, self).__init__(masked_parameters)
+    def __init__(self, masked_parameters, clone=True):
+        super(GraSP, self).__init__(masked_parameters, clone=clone)
         self.temp = 200
         self.eps = 1e-10
 
@@ -176,8 +202,8 @@ class GraSP(Pruner):
 
 
 class SynFlow(Pruner):
-    def __init__(self, masked_parameters):
-        super(SynFlow, self).__init__(masked_parameters)
+    def __init__(self, masked_parameters, clone=True):
+        super(SynFlow, self).__init__(masked_parameters, clone=clone)
 
     def score(self, model, loss, dataloader, device):
       
@@ -210,3 +236,45 @@ class SynFlow(Pruner):
 
         nonlinearize(model, signs)
 
+# alternates between pruning highest and lowest scores
+# starts by pruning lowest scores
+class AlternatingSynFlow(Pruner):
+    def __init__(self, masked_parameters, clone=True):
+        super(AlternatingSynFlow, self).__init__(masked_parameters, clone=clone)
+        self.flip = False # flag indicating whether to prune lowest scores or highest scores
+
+    def score(self, model, loss, dataloader, device):
+      
+        @torch.no_grad()
+        def linearize(model):
+            # model.double()
+            signs = {}
+            for name, param in model.state_dict().items():
+                signs[name] = torch.sign(param)
+                param.abs_()
+            return signs
+
+        @torch.no_grad()
+        def nonlinearize(model, signs):
+            # model.float()
+            for name, param in model.state_dict().items():
+                param.mul_(signs[name])
+        
+        signs = linearize(model)
+
+        (data, _) = next(iter(dataloader))
+        input_dim = list(data[0,:].shape)
+        input = torch.ones([1] + input_dim, dtype=torch.float64).to(device)
+        output = model(input)
+        torch.sum(output).backward()
+        
+        for _, p in self.masked_parameters:
+            t = torch.clone(p.grad * p).abs_()
+            if self.flip: # prune highest nonzero scores
+                t[t > 0] = 1/t[t > 0]
+
+            self.scores[id(p)] = torch.clone(t).detach()
+            p.grad.data.zero_()
+
+        nonlinearize(model, signs)
+        self.flip = not self.flip
