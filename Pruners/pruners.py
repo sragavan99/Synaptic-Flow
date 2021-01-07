@@ -2,8 +2,11 @@ import torch
 import numpy as np
 
 class Pruner:
-    def __init__(self, masked_parameters):
-        self.masked_parameters = list(masked_parameters)
+    def __init__(self, masked_parameters, clone=True):
+        if clone:
+            self.masked_parameters = list(masked_parameters)
+        else:
+            self.masked_parameters = masked_parameters
         self.scores = {}
 
     def score(self, model, loss, dataloader, device):
@@ -86,9 +89,10 @@ class Pruner:
 # starts with pruner1
 class AlternatingPruner(Pruner):
     def __init__(self, masked_parameters, pruner1, pruner2):
-        super(AlternatingPruner, self).__init__(masked_parameters)
-        self.pruner1 = pruner1(masked_parameters)
-        self.pruner2 = pruner2(masked_parameters)
+        mp = list(masked_parameters)
+        super(AlternatingPruner, self).__init__(mp, clone=False)
+        self.pruner1 = pruner1(mp, clone=False)
+        self.pruner2 = pruner2(mp, clone=False)
         self.use1 = True
 
     def score(self, model, loss, dataloader, device):
@@ -105,8 +109,8 @@ class AlternatingPruner(Pruner):
 
 
 class Rand(Pruner):
-    def __init__(self, masked_parameters):
-        super(Rand, self).__init__(masked_parameters)
+    def __init__(self, masked_parameters, clone=True):
+        super(Rand, self).__init__(masked_parameters, clone=clone)
 
     def score(self, model, loss, dataloader, device):
         for _, p in self.masked_parameters:
@@ -114,8 +118,8 @@ class Rand(Pruner):
 
 
 class Mag(Pruner):
-    def __init__(self, masked_parameters):
-        super(Mag, self).__init__(masked_parameters)
+    def __init__(self, masked_parameters, clone=True):
+        super(Mag, self).__init__(masked_parameters, clone=clone)
     
     def score(self, model, loss, dataloader, device):
         for _, p in self.masked_parameters:
@@ -124,8 +128,8 @@ class Mag(Pruner):
 
 # Based on https://github.com/mi-lad/snip/blob/master/snip.py#L18
 class SNIP(Pruner):
-    def __init__(self, masked_parameters):
-        super(SNIP, self).__init__(masked_parameters)
+    def __init__(self, masked_parameters, clone=True):
+        super(SNIP, self).__init__(masked_parameters, clone=clone)
 
     def score(self, model, loss, dataloader, device):
 
@@ -155,8 +159,8 @@ class SNIP(Pruner):
 
 # Based on https://github.com/alecwangcq/GraSP/blob/master/pruner/GraSP.py#L49
 class GraSP(Pruner):
-    def __init__(self, masked_parameters):
-        super(GraSP, self).__init__(masked_parameters)
+    def __init__(self, masked_parameters, clone=True):
+        super(GraSP, self).__init__(masked_parameters, clone=clone)
         self.temp = 200
         self.eps = 1e-10
 
@@ -198,8 +202,8 @@ class GraSP(Pruner):
 
 
 class SynFlow(Pruner):
-    def __init__(self, masked_parameters):
-        super(SynFlow, self).__init__(masked_parameters)
+    def __init__(self, masked_parameters, clone=True):
+        super(SynFlow, self).__init__(masked_parameters, clone=clone)
 
     def score(self, model, loss, dataloader, device):
       
@@ -235,8 +239,8 @@ class SynFlow(Pruner):
 # alternates between pruning highest and lowest scores
 # starts by pruning lowest scores
 class AlternatingSynFlow(Pruner):
-    def __init__(self, masked_parameters):
-        super(AlternatingSynFlow, self).__init__(masked_parameters)
+    def __init__(self, masked_parameters, clone=True):
+        super(AlternatingSynFlow, self).__init__(masked_parameters, clone=clone)
         self.flip = False # flag indicating whether to prune lowest scores or highest scores
 
     def score(self, model, loss, dataloader, device):

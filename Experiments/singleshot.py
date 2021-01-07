@@ -8,6 +8,7 @@ from Utils import metrics
 from Utils import plot
 from train import *
 from prune import *
+from path_counting import get_path_count
 
 def run(args):
     ## Random Seed and Device ##
@@ -50,6 +51,9 @@ def run(args):
     if args.pruner in ["synflow", "altsynflow", "synflowmag"]:
         model.float() # to address exploding/vanishing gradients in SynFlow for deep models
     torch.save(model.state_dict(),"{}/post-prune-model.pt".format(args.result_dir))
+
+    ## Compute Path Count ##
+    print("Number of paths", get_path_count(mdl=model, arch=args.model))
     
     ## Post-Train ##
     print('Post-Training for {} epochs.'.format(args.post_epochs))
