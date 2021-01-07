@@ -22,6 +22,7 @@ class Pruner:
         k = int((1.0 - sparsity) * global_scores.numel())
         if not k < 1:
             threshold, _ = torch.kthvalue(global_scores, k)
+            # print(global_scores.min(), global_scores.max(), threshold)
             for mask, param in self.masked_parameters:
                 score = self.scores[id(param)] 
                 zero = torch.tensor([0.]).to(mask.device)
@@ -80,6 +81,27 @@ class Pruner:
              remaining_params += mask.detach().cpu().numpy().sum()
              total_params += mask.numel()
         return remaining_params, total_params
+
+# alternates between using the scores of two different pruners
+# starts with pruner1
+class AlternatingPruner(Pruner):
+    def __init__(self, masked_parameters, pruner1, pruner2):
+        super(AlternatingPruner, self).__init__(masked_parameters)
+        self.pruner1 = pruner1(masked_parameters)
+        self.pruner2 = pruner2(masked_parameters)
+        self.use1 = True
+
+    def score(self, model, loss, dataloader, device):
+        if self.use1:
+            pruner = self.pruner1
+        else:
+            pruner = self.pruner2
+
+        pruner.score(model, loss, dataloader, device)
+        for _, p in self.masked_parameters:
+            self.scores[id(p)] = pruner.scores[id(p)]
+
+        self.use1 = not self.use1
 
 
 class Rand(Pruner):
@@ -243,11 +265,11 @@ class AlternatingSynFlow(Pruner):
         torch.sum(output).backward()
         
         for _, p in self.masked_parameters:
-            t = p.grad * p
-            if self.flip: # prune lowest nonzero scores
+            t = torch.clone(p.grad * p).abs_()
+            if self.flip: # prune highest nonzero scores
                 t[t > 0] = 1/t[t > 0]
 
-            self.scores[id(p)] = torch.clone(t).detach().abs_()
+            self.scores[id(p)] = torch.clone(t).detach()
             p.grad.data.zero_()
 
         nonlinearize(model, signs)
