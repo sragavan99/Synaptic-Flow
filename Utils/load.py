@@ -203,7 +203,8 @@ def pruner(method):
         'grasp': pruners.GraSP,
         'synflow' : pruners.SynFlow,
         'altsynflow': pruners.AlternatingSynFlow,
-        'synflowmag': lambda p: pruners.AlternatingPruner(p, pruners.SynFlow, pruners.Mag)
+        'synflowmag': lambda p: pruners.AlternatingPruner(p, pruners.SynFlow, pruners.Mag),
+        'rsfgrad': pruners.RSFGrad,
     }
     return prune_methods[method]
 
