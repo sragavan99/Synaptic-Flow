@@ -116,6 +116,13 @@ class Rand(Pruner):
         for _, p in self.masked_parameters:
             self.scores[id(p)] = torch.randn_like(p)
 
+class RandByLayer(Pruner):
+    def __init__(self, masked_parameters, clone=True):
+        super(Rand, self).__init__(masked_parameters, clone=clone)
+
+    def score(self, model, loss, dataloader, device):
+        for _, p in self.masked_parameters:
+            self.scores[id(p)] = torch.randn_like(p)
 
 class Mag(Pruner):
     def __init__(self, masked_parameters, clone=True):

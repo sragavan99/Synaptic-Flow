@@ -198,6 +198,7 @@ def model(model_architecture, model_class):
 def pruner(method):
     prune_methods = {
         'rand' : pruners.Rand,
+        'randbylayer' : pruners.RandByLayer,
         'mag' : pruners.Mag,
         'snip' : pruners.SNIP,
         'grasp': pruners.GraSP,
