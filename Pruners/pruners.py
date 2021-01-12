@@ -119,10 +119,50 @@ class Rand(Pruner):
 class RandByLayer(Pruner):
     def __init__(self, masked_parameters, clone=True):
         super(RandByLayer, self).__init__(masked_parameters, clone=clone)
+        # ids for final layers. find by uncommenting print statement below
+        # sparsity for final layer
+        self.FC_layer_sparsity = 0.5
+        # shape of final layer (to identify in below loop)
+        self.FC_layer_shape = torch.Size([10, 128])
 
     def score(self, model, loss, dataloader, device):
+        # track global maximum
+        global_max = 'null'
+        # track global minimum
+        global_min = 'null'
         for _, p in self.masked_parameters:
-            self.scores[id(p)] = torch.randn_like(p)
+            score_tensor = torch.randn_like(p)
+            
+            # update global max
+            if (global_max == 'null'):
+                global_max = score_tensor.max()
+            else:
+                global_max = torch.max([global_max, score_tensor.max()])
+
+            # update global min
+            if (global_min == 'null'):
+                global_min = score_tensor.min()
+            else:
+                global_min = torch.min([global_min, score_tensor.min()])
+
+            self.scores[id(p)] = score_tensor
+
+        # find FC layer(s) and adjust random scores to
+        # result in adjusted pruning
+        for _, p in self.masked_parameters:
+            if (p.shape == self.FC_layer_shape):
+                score_tensor = self.scores[id(p)]
+                # shift entries in FC layer to be higher than all others
+                score_tensor = score_tensor + (global_max - global_min)
+                # set threshold for FC layer to match self.FC_layer_sparsity
+                threshold_index = int(
+                    (1.0 - self.FC_layer_sparsity) * score_tensor.numel())
+                threshold, _ = torch.kthvalue(score_tensor, threshold_index)
+
+                # make sure the compliment of selected values don't get selected
+                # at all
+                score_tensor[score_tensor <= threshold] = global_min - 1
+                self.scores[id(p)] = score_tensor
 
 class Mag(Pruner):
     def __init__(self, masked_parameters, clone=True):
