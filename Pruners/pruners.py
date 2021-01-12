@@ -121,7 +121,7 @@ class RandByLayer(Pruner):
         super(RandByLayer, self).__init__(masked_parameters, clone=clone)
         # ids for final layers. find by uncommenting print statement below
         # sparsity for final layer
-        self.FC_layer_sparsity = 0.5
+        self.FC_layer_sparsity = 0.3
         # shape of final layer (to identify in below loop)
         self.FC_layer_shape = torch.Size([10, 128])
 
@@ -137,13 +137,13 @@ class RandByLayer(Pruner):
             if (global_max == 'null'):
                 global_max = score_tensor.max()
             else:
-                global_max = torch.max([global_max, score_tensor.max()])
+                global_max = torch.max(torch.tensor([global_max, score_tensor.max()]))
 
             # update global min
             if (global_min == 'null'):
                 global_min = score_tensor.min()
             else:
-                global_min = torch.min([global_min, score_tensor.min()])
+                global_min = torch.min(torch.tensor([global_min, score_tensor.min()]))
 
             self.scores[id(p)] = score_tensor
 
@@ -157,7 +157,9 @@ class RandByLayer(Pruner):
                 # set threshold for FC layer to match self.FC_layer_sparsity
                 threshold_index = int(
                     (1.0 - self.FC_layer_sparsity) * score_tensor.numel())
-                threshold, _ = torch.kthvalue(score_tensor, threshold_index)
+               
+                threshold, _ = torch.kthvalue(
+                    torch.flatten(score_tensor), threshold_index)
 
                 # make sure the compliment of selected values don't get selected
                 # at all
