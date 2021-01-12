@@ -137,13 +137,13 @@ class RandByLayer(Pruner):
             if (global_max == 'null'):
                 global_max = score_tensor.max()
             else:
-                global_max = torch.max(torch.tensor([global_max, score_tensor.max()]))
+                global_max = torch.maximum(global_max, score_tensor.max())
 
             # update global min
             if (global_min == 'null'):
                 global_min = score_tensor.min()
             else:
-                global_min = torch.min(torch.tensor([global_min, score_tensor.min()]))
+                global_min = torch.minimum(global_min, score_tensor.min())
 
             self.scores[id(p)] = score_tensor
 
