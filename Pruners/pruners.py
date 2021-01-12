@@ -118,7 +118,7 @@ class Rand(Pruner):
 
 class RandByLayer(Pruner):
     def __init__(self, masked_parameters, clone=True):
-        super(Rand, self).__init__(masked_parameters, clone=clone)
+        super(RandByLayer, self).__init__(masked_parameters, clone=clone)
 
     def score(self, model, loss, dataloader, device):
         for _, p in self.masked_parameters:

@@ -31,7 +31,7 @@
     "prune_epochs": 1,
     "prune_residual": false,
     "prune_train_mode": false,
-    "pruner": "rand",
+    "pruner": "randbylayer",
     "pruner_list": [],
     "reinitialize": false,
     "result_dir": "Experiments/singleshot/randbylayer_experiments",
@@ -41,7 +41,7 @@
     "sparsity": 0.05,
     "test_batch_size": 256,
     "train_batch_size": 128,
-    "train_corrupt": 1.0,
+    "train_corrupt": 0.0,
     "verbose": true,
     "weight_decay": 0.0001,
     "workers": 4
