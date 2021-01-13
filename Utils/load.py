@@ -11,6 +11,7 @@ from Models import imagenet_vgg
 from Models import imagenet_resnet
 from Pruners import pruners
 from Utils import custom_datasets
+from Utils import cifar
 from torch.utils.data import TensorDataset
 
 def device(gpu, seed):
@@ -35,6 +36,7 @@ def dimension(dataset):
 
 def get_transform(size, padding, mean, std, preprocess):
     transform = []
+    print("Will I be preprocessing?", preprocess)
     if preprocess:
         transform.append(transforms.RandomCrop(size=size, padding=padding))
         transform.append(transforms.RandomHorizontalFlip())
@@ -42,16 +44,19 @@ def get_transform(size, padding, mean, std, preprocess):
     transform.append(transforms.Normalize(mean, std))
     return transforms.Compose(transform)
 
+# train should be in ['train', 'val', 'trainval', 'test']
 def dataloader(dataset, batch_size, train, workers, corrupt_prob=0.0, length=None):
+    print("Which dataset?", train)
     # Dataset
     if dataset == 'mnist':
         mean, std = (0.1307,), (0.3081,)
         transform = get_transform(size=28, padding=0, mean=mean, std=std, preprocess=False)
         dataset = datasets.MNIST('Data', train=train, download=True, transform=transform)
     if dataset == 'cifar10':
+        assert(train in ['train', 'val', 'trainval', 'test'])
         mean, std = (0.491, 0.482, 0.447), (0.247, 0.243, 0.262)
-        transform = get_transform(size=32, padding=4, mean=mean, std=std, preprocess=train)
-        dataset = datasets.CIFAR10('Data', train=train, download=True, transform=transform) 
+        transform = get_transform(size=32, padding=4, mean=mean, std=std, preprocess=(train in ['train', 'trainval']))
+        dataset = cifar.get_cifar_dataset(train, transform)
     if dataset == 'cifar100':
         mean, std = (0.507, 0.487, 0.441), (0.267, 0.256, 0.276)
         transform = get_transform(size=32, padding=4, mean=mean, std=std, preprocess=train)
@@ -100,7 +105,8 @@ def dataloader(dataset, batch_size, train, workers, corrupt_prob=0.0, length=Non
     # Dataloader
     use_cuda = torch.cuda.is_available()
     kwargs = {'num_workers': workers, 'pin_memory': True} if use_cuda else {}
-    shuffle = train is True
+    shuffle = train in ['train', 'trainval']
+    print("Will I be shuffling?", shuffle)
     if length is not None:
         indices = torch.randperm(len(dataset))[:length]
         dataset = torch.utils.data.Subset(dataset, indices)
@@ -109,6 +115,11 @@ def dataloader(dataset, batch_size, train, workers, corrupt_prob=0.0, length=Non
                                              batch_size=batch_size, 
                                              shuffle=shuffle, 
                                              **kwargs)
+
+    # sanity checking bincounts of labels in this split
+    dummy_loader = torch.utils.data.DataLoader(dataset=dataset, batch_size=200000)
+    for _, labels in dummy_loader:
+        print("Bincounts", torch.bincount(labels))
 
     return dataloader
 

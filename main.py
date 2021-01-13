@@ -16,6 +16,8 @@ if __name__ == '__main__':
     training_args.add_argument('--dataset', type=str, default='mnist',
                         choices=['mnist','cifar10','cifar100','tiny-imagenet','imagenet'],
                         help='dataset (default: mnist)')
+    training_args.add_argument('--validation', action='store_true',
+                        help='whether to use train + val set or trainval + test set')
     training_args.add_argument('--model', type=str, default='fc', choices=['fc','conv',
                         'vgg11','vgg11-bn','vgg13','vgg13-bn','vgg16','vgg16-bn','vgg19','vgg19-bn',
                         'resnet18','resnet20','resnet32','resnet34','resnet44','resnet50',

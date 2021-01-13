@@ -19,10 +19,18 @@ def run(args):
 
     ## Data ##
     print('Loading {} dataset.'.format(args.dataset))
-    input_shape, num_classes = load.dimension(args.dataset) 
-    prune_loader = load.dataloader(args.dataset, args.train_batch_size, True, args.workers, corrupt_prob=args.prune_corrupt)
-    train_loader = load.dataloader(args.dataset, args.train_batch_size, True, args.workers, corrupt_prob=args.train_corrupt)
-    test_loader = load.dataloader(args.dataset, args.test_batch_size, False, args.workers)
+    input_shape, num_classes = load.dimension(args.dataset)
+
+    if args.validation:
+        trainset = 'train'
+        evalset = 'val'
+    else:
+        trainset = 'trainval'
+        evalset = 'test'
+
+    prune_loader = load.dataloader(args.dataset, args.train_batch_size, trainset, args.workers, corrupt_prob=args.prune_corrupt)
+    train_loader = load.dataloader(args.dataset, args.train_batch_size, trainset, args.workers, corrupt_prob=args.train_corrupt)
+    test_loader = load.dataloader(args.dataset, args.test_batch_size, evalset, args.workers)
 
     ## Model ##
     print('Creating {} model.'.format(args.model))
