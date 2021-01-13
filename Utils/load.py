@@ -116,11 +116,6 @@ def dataloader(dataset, batch_size, train, workers, corrupt_prob=0.0, length=Non
                                              shuffle=shuffle, 
                                              **kwargs)
 
-    # sanity checking bincounts of labels in this split
-    dummy_loader = torch.utils.data.DataLoader(dataset=dataset, batch_size=200000)
-    for _, labels in dummy_loader:
-        print("Bincounts", torch.bincount(labels))
-
     return dataloader
 
 def model(model_architecture, model_class):
