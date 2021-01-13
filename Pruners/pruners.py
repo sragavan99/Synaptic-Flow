@@ -122,8 +122,8 @@ class Mag(Pruner):
         super(Mag, self).__init__(masked_parameters, clone=clone)
     
     def score(self, model, loss, dataloader, device):
-        for _, p in self.masked_parameters:
-            self.scores[id(p)] = torch.clone(p.data).detach().abs_()
+        for m, p in self.masked_parameters:
+            self.scores[id(p)] = (m * torch.clone(p.data)).detach().abs_()
 
 
 # Based on https://github.com/mi-lad/snip/blob/master/snip.py#L18
