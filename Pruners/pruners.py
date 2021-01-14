@@ -121,7 +121,7 @@ class RandByLayer(Pruner):
         super(RandByLayer, self).__init__(masked_parameters, clone=clone)
         # ids for final layers. find by uncommenting print statement below
         # sparsity for final layer
-        self.FC_layer_sparsity = 0.3
+        self.FC_layer_sparsity = 0.5
         # shape of final layer (to identify in below loop)
         self.FC_layer_shape = torch.Size([10, 128])
 
