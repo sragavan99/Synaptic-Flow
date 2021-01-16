@@ -22,6 +22,7 @@ class Pruner:
 
         # Threshold scores
         global_scores = torch.cat([torch.flatten(v) for v in self.scores.values()])
+        # print("Fraction of nonzero scores", global_scores.count_nonzero()/global_scores.numel())
         k = int((1.0 - sparsity) * global_scores.numel())
         if not k < 1:
             threshold, _ = torch.kthvalue(global_scores, k)
