@@ -7,6 +7,7 @@ from Utils import generator
 from Utils import metrics
 from train import *
 from prune import *
+from path_counting import get_path_count
 
 def run(args):
     if not args.save:
@@ -97,6 +98,9 @@ def run(args):
         scheduler.load_state_dict(torch.load("{}/scheduler.pt".format(args.result_dir), map_location=device))
 
 
+    ## Compute Path Count ##
+    print("Number of paths", get_path_count(mdl=model, arch=args.model))
+    
     # Train Model
     post_result = train_eval_loop(model, loss, optimizer, scheduler, train_loader, 
                                     test_loader, device, args.post_epochs, args.verbose)

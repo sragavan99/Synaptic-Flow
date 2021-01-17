@@ -71,7 +71,7 @@ class Pruner:
         for mask, param in self.masked_parameters:
             shape = mask.shape
             perm = torch.randperm(mask.nelement())
-            mask = mask.reshape(-1)[perm].reshape(shape)
+            mask.copy_(mask.reshape(-1)[perm].reshape(shape))
 
     def invert(self):
         for v in self.scores.values():
