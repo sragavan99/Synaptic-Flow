@@ -362,3 +362,18 @@ class AlternatingSynFlow(Pruner):
 
         nonlinearize(model, signs)
         self.flip = not self.flip
+
+class PruneMidway(Pruner):
+    def __init__(self, masked_parameters, pruner):
+        mp = list(masked_parameters)
+        super(PruneMidway, self).__init__(mp, clone=False)
+        self.pruner = pruner(mp, clone=False)
+
+    def score(self, model, loss, dataloader, device):
+        pruner = self.pruner
+        # model saved from pretrain, see method train_eval_loop_midsave
+        # in train.py
+        model_midway = torch.load('model_pretrain_midway.pt')
+        pruner.score(model_midway, loss, dataloader, device)
+        for _, p in self.masked_parameters:
+            self.scores[id(p)] = pruner.scores[id(p)]
