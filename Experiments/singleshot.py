@@ -69,7 +69,7 @@ def run(args):
     print("Number of paths", get_path_count(mdl=model, arch=args.model))
 
     # Load weights from rewinded model
-    if args.pre_epochs > 0:
+    if args.rewind_epochs > 0:
         original_dict = torch.load("model_pretrain_midway.pt", map_location=device)
         original_weights = dict(filter(lambda v: 'mask' not in v[0], original_dict.items()))
         model_dict = model.state_dict()
