@@ -61,8 +61,8 @@ def train_eval_loop(model, loss, optimizer, scheduler, train_loader, test_loader
     return pd.DataFrame(rows, columns=columns)
 
 # adapted from train_eval_loop, adds savepoint paramater,
-# an integer defining which epoch to save the model (used for partial rollback pruning)
-def train_eval_loop_midsave(model, loss, optimizer, scheduler, train_loader, test_loader, device, epochs, verbose, savepoint):
+# an integer defining how many epochs from end we want to save the model
+def train_eval_loop_midsave(model, loss, optimizer, scheduler, train_loader, test_loader, device, epochs, verbose, rewind):
     train_loss, train_accuracy1, train_accuracy5 = eval(model, loss, train_loader, device, verbose)
     test_loss, accuracy1, accuracy5 = eval(model, loss, test_loader, device, verbose)
     rows = [[np.nan, train_loss, train_accuracy1, train_accuracy5, test_loss, accuracy1, accuracy5]]
@@ -78,7 +78,7 @@ def train_eval_loop_midsave(model, loss, optimizer, scheduler, train_loader, tes
         scheduler.step()
         rows.append(row)
 
-        if epoch == savepoint:
+        if epoch == (epochs - rewind):
             torch.save(model.state_dict(), 'model_pretrain_midway.pt')
     columns = ['train_loss_trainmode', 'train_loss', 'train_top1', 'train_top5', 'test_loss', 'test_top1', 'test_top5']
     return pd.DataFrame(rows, columns=columns)

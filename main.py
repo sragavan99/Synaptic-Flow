@@ -41,6 +41,8 @@ if __name__ == '__main__':
                         help='number of epochs to train before pruning (default: 0)')
     training_args.add_argument('--post-epochs', type=int, default=10,
                         help='number of epochs to train after pruning (default: 10)')
+    training_args.add_argument('--rewind-epochs', type=int, default=0,
+                        help='number of epochs to rewind after pruning (default: 0)')
     training_args.add_argument('--lr', type=float, default=0.001,
                         help='learning rate (default: 0.001)')
     training_args.add_argument('--lr-drops', type=int, nargs='*', default=[],

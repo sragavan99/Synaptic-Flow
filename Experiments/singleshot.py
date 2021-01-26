@@ -44,7 +44,11 @@ def run(args):
 
     ## Pre-Train ##
     print('Pre-Train for {} epochs.'.format(args.pre_epochs))
-    pre_result = train_eval_loop(model, loss, optimizer, scheduler, train_loader, 
+    if args.rewind_epochs > 0:
+        pre_result = train_eval_loop_midsave(model, loss, optimizer, scheduler, train_loader, 
+                                 test_loader, device, args.pre_epochs, args.verbose, args.rewind_epochs)
+    else:
+        pre_result = train_eval_loop(model, loss, optimizer, scheduler, train_loader, 
                                  test_loader, device, args.pre_epochs, args.verbose)
 
     torch.save(model.state_dict(),"{}/pre-trained.pt".format(args.result_dir))
@@ -63,7 +67,14 @@ def run(args):
 
     ## Compute Path Count ##
     print("Number of paths", get_path_count(mdl=model, arch=args.model))
-    
+
+    # Load weights from rewinded model
+    if args.pre_epochs > 0:
+        original_dict = torch.load("model_pretrain_midway.pt", map_location=device)
+        original_weights = dict(filter(lambda v: 'mask' not in v[0], original_dict.items()))
+        model_dict = model.state_dict()
+        model_dict.update(original_weights)
+        model.load_state_dict(model_dict)
     ## Post-Train ##
     print('Post-Training for {} epochs.'.format(args.post_epochs))
     post_result = train_eval_loop(model, loss, optimizer, scheduler, train_loader, 
