@@ -42,11 +42,12 @@ def run(args):
     scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=args.lr_drops, gamma=args.lr_drop_rate)
     torch.save(model.state_dict(),"{}/init-model.pt".format(args.result_dir))
 
-
     ## Pre-Train ##
     print('Pre-Train for {} epochs.'.format(args.pre_epochs))
     pre_result = train_eval_loop(model, loss, optimizer, scheduler, train_loader, 
                                  test_loader, device, args.pre_epochs, args.verbose)
+
+    torch.save(model.state_dict(),"{}/pre-trained.pt".format(args.result_dir))
 
     ## Prune ##
     if args.pruner in ["synflow", "altsynflow", "synflowmag", "rsfgrad"]:
