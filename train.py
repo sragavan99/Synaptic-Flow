@@ -78,7 +78,7 @@ def train_eval_loop_midsave(model, loss, optimizer, scheduler, train_loader, tes
         scheduler.step()
         rows.append(row)
 
-        if epoch == (epochs - rewind):
+        if epoch == (epochs - rewind - 1):
             torch.save(model.state_dict(), 'model_pretrain_midway.pt')
     columns = ['train_loss_trainmode', 'train_loss', 'train_top1', 'train_top5', 'test_loss', 'test_top1', 'test_top5']
     return pd.DataFrame(rows, columns=columns)
