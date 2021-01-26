@@ -124,7 +124,7 @@ class Mag(Pruner):
     
     def score(self, model, loss, dataloader, device):
         for m, p in self.masked_parameters:
-            self.scores[id(p)] = (m * torch.clone(p.data)).detach().abs_()
+            self.scores[id(p)] = (torch.clone(m * p.data)).detach().abs_()
 
 
 # Based on https://github.com/mi-lad/snip/blob/master/snip.py#L18
@@ -146,7 +146,9 @@ class SNIP(Pruner):
 
         # calculate score |g * theta|
         for m, p in self.masked_parameters:
-            self.scores[id(p)] = torch.clone(m.grad).detach().abs_()
+            # multiplying by m to make sure that scores of already pruned weights are 0
+            # (this is important when iterating SNIP)
+            self.scores[id(p)] = torch.clone(m * m.grad).detach().abs_()
             p.grad.data.zero_()
             m.grad.data.zero_()
             m.requires_grad = False

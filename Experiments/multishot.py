@@ -88,7 +88,7 @@ def run(args):
 
         # Reset Model's Weights
         original_dict = torch.load("{}/model.pt".format(args.result_dir), map_location=device)
-        original_weights = dict(filter(lambda v: (v[1].requires_grad == True), original_dict.items()))
+        original_weights = dict(filter(lambda v: 'mask' not in v[0], original_dict.items()))
         model_dict = model.state_dict()
         model_dict.update(original_weights)
         model.load_state_dict(model_dict)
