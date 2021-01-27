@@ -66,10 +66,15 @@ def run(args):
     for l in range(level):
 
         # Pre Train Model
-        level_train_result = train_eval_loop(model, loss, optimizer, scheduler, prune_loader, 
+        if args.rewind_epochs > 0:
+            level_train_result = train_eval_loop_midsave(model, loss, optimizer, scheduler, prune_loader, 
+                        test_loader, device, args.pre_epochs, args.verbose, args.rewind_epochs)
+        else:
+            level_train_result = train_eval_loop(model, loss, optimizer, scheduler, prune_loader, 
                         test_loader, device, args.pre_epochs, args.verbose)
+
         level_train_result.to_pickle(f'{args.result_dir}/train-level-{l}-metrics.pkl')
-        
+
         torch.save(model.state_dict(),"{}/train-level-{}.pt".format(args.result_dir, l))
         
         # Prune Model
@@ -87,7 +92,10 @@ def run(args):
 
 
         # Reset Model's Weights
-        original_dict = torch.load("{}/model.pt".format(args.result_dir), map_location=device)
+        if args.rewind_epochs > 0:
+            original_dict = torch.load("model_pretrain_midway.pt", map_location=device)
+        else:
+            original_dict = torch.load("{}/model.pt".format(args.result_dir), map_location=device)
         original_weights = dict(filter(lambda v: 'mask' not in v[0], original_dict.items()))
         model_dict = model.state_dict()
         model_dict.update(original_weights)
