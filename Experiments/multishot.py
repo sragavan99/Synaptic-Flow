@@ -8,6 +8,7 @@ from Utils import metrics
 from train import *
 from prune import *
 from path_counting import get_path_count
+from neuron_collapse import number_active_filters
 
 def run(args):
     if not args.save:
@@ -90,7 +91,6 @@ def run(args):
                                     lambda p: generator.prunable(p, args.prune_batchnorm, args.prune_residual))
         prune_result.to_pickle("{}/sparsity-{}-{}-{}.pkl".format(args.result_dir, args.pruner, str(sparsity), str(l + 1)))
 
-
         # Reset Model's Weights
         if args.rewind_epochs > 0:
             original_dict = torch.load("model_pretrain_midway.pt", map_location=device)
@@ -107,7 +107,8 @@ def run(args):
 
 
     ## Compute Path Count ##
-    print("Number of paths", get_path_count(mdl=model, arch=args.model))
+    # print("Number of paths", get_path_count(mdl=model, arch=args.model))
+    print("Number of active filters", number_active_filters(mdl=model, arch=args.model))
     
     # Train Model
     post_result = train_eval_loop(model, loss, optimizer, scheduler, train_loader, 

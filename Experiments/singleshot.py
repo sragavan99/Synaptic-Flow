@@ -9,6 +9,7 @@ from Utils import plot
 from train import *
 from prune import *
 from path_counting import get_path_count
+from neuron_collapse import number_active_filters
 
 def run(args):
     ## Random Seed and Device ##
@@ -63,7 +64,8 @@ def run(args):
 
     ## Compute Path Count ##
     print("Number of paths", get_path_count(mdl=model, arch=args.model))
-    
+    print("Number of active filters", number_active_filters(mdl=model, arch=args.model))
+
     ## Post-Train ##
     print('Post-Training for {} epochs.'.format(args.post_epochs))
     post_result = train_eval_loop(model, loss, optimizer, scheduler, train_loader, 
