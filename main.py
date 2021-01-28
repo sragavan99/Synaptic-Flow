@@ -2,6 +2,7 @@ import argparse
 import json
 import os
 from Experiments import singleshot
+from Experiments import shuffleablation
 from Experiments import multishot
 from Experiments.theory import unit_conservation
 from Experiments.theory import layer_conservation
@@ -102,7 +103,7 @@ if __name__ == '__main__':
     ## Experiment Hyperparameters ##
     parser.add_argument('--experiment', type=str, default='singleshot', 
                         choices=['singleshot','multishot','unit-conservation',
-                        'layer-conservation','imp-conservation','schedule-conservation'],
+                        'layer-conservation','imp-conservation','schedule-conservation', 'shuffleablation'],
                         help='experiment name (default: example)')
     parser.add_argument('--expid', type=str, default='',
                         help='name used to save results (default: "")')
@@ -156,4 +157,6 @@ if __name__ == '__main__':
         imp_conservation.run(args)
     if args.experiment == 'schedule-conservation':
         schedule_conservation.run(args)
+    if args.experiment == 'shuffleablation':
+        shuffleablation.run(args)
 
