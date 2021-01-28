@@ -33,7 +33,7 @@ def run(args):
         trainset = 'trainval'
         evalset = 'test'
 
-    prune_loader = load.dataloader(args.dataset, args.prune_batch_size, trainset, args.workers, corrupt_prob=args.prune_corrupt, length=args.prune_dataset_ratio * num_classes)
+    prune_loader = load.dataloader(args.dataset, args.prune_batch_size, trainset, args.workers, corrupt_prob=args.prune_corrupt)
     train_loader = load.dataloader(args.dataset, args.train_batch_size, trainset, args.workers, corrupt_prob=args.train_corrupt)
     test_loader = load.dataloader(args.dataset, args.test_batch_size, evalset, args.workers)
 

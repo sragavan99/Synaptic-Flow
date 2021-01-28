@@ -105,6 +105,7 @@ def run(args):
         optimizer.load_state_dict(torch.load("{}/optimizer.pt".format(args.result_dir), map_location=device))
         scheduler.load_state_dict(torch.load("{}/scheduler.pt".format(args.result_dir), map_location=device))
 
+    torch.save(model.state_dict(),"{}/post-prune-model.pt".format(args.result_dir))
 
     ## Compute Path Count ##
     # print("Number of paths", get_path_count(mdl=model, arch=args.model))
