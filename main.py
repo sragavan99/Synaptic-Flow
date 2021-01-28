@@ -31,6 +31,10 @@ if __name__ == '__main__':
                         help='ensure last layer of model is dense (default: False)')
     training_args.add_argument('--pretrained', type=bool, default=False,
                         help='load pretrained weights (default: False)')
+    training_args.add_argument('--weight-file', type=str, default='',
+                        help='file from which to load the weights for the model if model has been pretrained')
+    training_args.add_argument('--mask-file', type=str, default='',
+                        help='file from which to load the mask for the model if model has been pretrained')
     training_args.add_argument('--optimizer', type=str, default='adam', choices=['sgd','momentum','adam','rms'],
                         help='optimizer (default: adam)')
     training_args.add_argument('--train-batch-size', type=int, default=64,
@@ -82,6 +86,8 @@ if __name__ == '__main__':
                         help='whether to reinitialize weight parameters after pruning (default: False)')
     pruning_args.add_argument('--shuffle', type=bool, default=False,
                         help='whether to shuffle masks after pruning (default: False)')
+    pruning_args.add_argument('--weightshuffle', type=bool, default=False,
+                        help='whether to shuffle surviving weights after pruning (default: False)')
     pruning_args.add_argument('--invert', type=bool, default=False,
                         help='whether to invert scores during pruning (default: False)')
     pruning_args.add_argument('--pruner-list', type=str, nargs='*', default=[],

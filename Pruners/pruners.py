@@ -73,6 +73,12 @@ class Pruner:
             perm = torch.randperm(mask.nelement())
             mask.copy_(mask.reshape(-1)[perm].reshape(shape))
 
+    def shuffle_surviving_weights(self):
+        for mask, param in self.masked_parameters:
+            idxs = (mask != 0)
+            perm = torch.randperm(idxs.sum())
+            param[idxs] = param[idxs][perm]
+
     def invert(self):
         for v in self.scores.values():
             v.div_(v**2)

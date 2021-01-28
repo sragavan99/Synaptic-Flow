@@ -3,7 +3,7 @@ import torch
 import numpy as np
 
 def prune_loop(model, loss, pruner, dataloader, device, sparsity, schedule, scope, epochs,
-               reinitialize=False, train_mode=False, shuffle=False, invert=False):
+               reinitialize=False, train_mode=False, shuffle=False, invert=False, weightshuffle=False):
     r"""Applies score mask loop iteratively to a final sparsity level.
     """
     # Set model to train or eval mode
@@ -30,6 +30,10 @@ def prune_loop(model, loss, pruner, dataloader, device, sparsity, schedule, scop
     # Shuffle masks
     if shuffle:
         pruner.shuffle()
+
+    # Shuffle surviving weights
+    if weightshuffle:
+        pruner.shuffle_surviving_weights()
 
     # Confirm sparsity level
     remaining_params, total_params = pruner.stats()
