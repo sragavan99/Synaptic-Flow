@@ -72,7 +72,7 @@ def run(args):
     print("Keys being loaded\n", '\n'.join(mask_dict.keys()))
     model_dict.update(mask_dict)
 
-    model.load_state_dict(mask_dict)
+    model.load_state_dict(model_dict)
 
     ## This uses a pruner but only for the purpose of shuffling weights ##
     assert(args.prune_epochs == 0 and args.weightshuffle)
