@@ -12,10 +12,9 @@ from path_counting import get_path_count
 from neuron_collapse import number_active_filters
 
 # This code is currently very specific to the setting where you
-# 1. pretrain for 5 epochs
-# 2. load a mask from a file (typically a mag pruning after full training setting)
-# 3. shuffle the surviving weights in each layer
-# 4. then post-train for 155 epochs
+# 1. load a model from a file
+# 2. shuffle the surviving weights in each layer
+# 3. then post-train for 155 epochs
 
 def run(args):
     ## Random Seed and Device ##
@@ -44,13 +43,6 @@ def run(args):
                                                      args.dense_classifier, 
                                                      args.pretrained).to(device)
 
-    # sanity check
-    for name, param in model.state_dict().items():
-        print(name)
-        if name.endswith('weight') and 'shortcut' not in name and 'bn' not in name:
-            mask = model.state_dict()[name + '_mask']
-            #print(name, "Param", param.sum(), "Mask", mask.sum(), "Survive", (param * mask).sum())
-
     loss = nn.CrossEntropyLoss()
     opt_class, opt_kwargs = load.optimizer(args.optimizer)
     optimizer = opt_class(generator.parameters(model), lr=args.lr, weight_decay=args.weight_decay, **opt_kwargs)
@@ -58,21 +50,30 @@ def run(args):
     torch.save(model.state_dict(),"{}/init-model.pt".format(args.result_dir))
 
     ## Pre-Train ##
+    assert(args.pre_epochs == 0)
     print('Pre-Train for {} epochs.'.format(args.pre_epochs))
     pre_result = train_eval_loop(model, loss, optimizer, scheduler, train_loader, 
                                  test_loader, device, args.pre_epochs, args.verbose)
 
     torch.save(model.state_dict(),"{}/pre-trained.pt".format(args.result_dir))
 
-    ## Load in the mask ##
-    maskref_dict = torch.load(args.mask_file, map_location=device)
-    model_dict = model.state_dict()
+    ## Load in the model ##
+    # maskref_dict = torch.load(args.mask_file, map_location=device)
+    # model_dict = model.state_dict()
 
-    mask_dict = dict(filter(lambda v: 'mask' in v[0], maskref_dict.items()))
-    print("Keys being loaded\n", '\n'.join(mask_dict.keys()))
-    model_dict.update(mask_dict)
+    # mask_dict = dict(filter(lambda v: 'mask' in v[0], maskref_dict.items()))
+    # print("Keys being loaded\n", '\n'.join(mask_dict.keys()))
+    # model_dict.update(mask_dict)
 
-    model.load_state_dict(model_dict)
+    model.load_state_dict(torch.load(args.model_file, map_location=device))
+
+    # sanity check part 1
+    dict_init = {}
+    for name, param in model.state_dict().items():
+        print(name)
+        if name.endswith('weight') and 'shortcut' not in name and 'bn' not in name:
+            mask = model.state_dict()[name + '_mask']
+            dict_init[name] = (param.sum().item(), mask.sum().item(), (param * mask).sum().item())
 
     ## This uses a pruner but only for the purpose of shuffling weights ##
     assert(args.prune_epochs == 0 and args.weightshuffle)
@@ -86,6 +87,13 @@ def run(args):
     if args.pruner in ["synflow", "altsynflow", "synflowmag", "rsfgrad"]:
         model.float() # to address exploding/vanishing gradients in SynFlow for deep models
     torch.save(model.state_dict(),"{}/post-prune-model.pt".format(args.result_dir))
+
+    # sanity check part 2
+    for name, param in model.state_dict().items():
+        print(name)
+        if name.endswith('weight') and 'shortcut' not in name and 'bn' not in name:
+            mask = model.state_dict()[name + '_mask']
+            print(name, dict_init[name], param.sum().item(), mask.sum().item(), (param * mask).sum().item())
 
     ## Compute Path Count ##
     print("Number of paths", get_path_count(mdl=model, arch=args.model))

@@ -36,6 +36,8 @@ if __name__ == '__main__':
                         help='file from which to load the weights for the model if model has been pretrained')
     training_args.add_argument('--mask-file', type=str, default='',
                         help='file from which to load the mask for the model if model has been pretrained')
+    training_args.add_argument('--model-file', type=str, default='',
+                        help='file from which to load the entire model if model has been pretrained')
     training_args.add_argument('--optimizer', type=str, default='adam', choices=['sgd','momentum','adam','rms'],
                         help='optimizer (default: adam)')
     training_args.add_argument('--train-batch-size', type=int, default=64,
