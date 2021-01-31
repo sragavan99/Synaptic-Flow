@@ -109,7 +109,9 @@ def dataloader(dataset, batch_size, train, workers, corrupt_prob=0.0, length=Non
     shuffle = train in ['train', 'trainval']
     print("Will I be shuffling?", shuffle)
     if length is not None:
-        indices = torch.randperm(len(dataset))[:length]
+        g = torch.Generator()
+        g.manual_seed(0)
+        indices = torch.randperm(len(dataset), generator=g)[:length]
         dataset = torch.utils.data.Subset(dataset, indices)
 
     dataloader = torch.utils.data.DataLoader(dataset=dataset, 
