@@ -27,9 +27,9 @@ def run(args):
         trainset = 'trainval'
         evalset = 'test'
 
-    prune_loader = load.dataloader(args.dataset, args.prune_batch_size, trainset, args.workers, corrupt_prob=args.prune_corrupt, length=args.prune_dataset_ratio * num_classes)
-    train_loader = load.dataloader(args.dataset, args.train_batch_size, trainset, args.workers, corrupt_prob=args.train_corrupt)
-    test_loader = load.dataloader(args.dataset, args.test_batch_size, evalset, args.workers)
+    prune_loader = load.dataloader(args.dataset, args.prune_batch_size, trainset, args.workers, corrupt_prob=args.prune_corrupt, length=args.prune_dataset_ratio * num_classes, seed=args.split_seed)
+    train_loader = load.dataloader(args.dataset, args.train_batch_size, trainset, args.workers, corrupt_prob=args.train_corrupt, seed=args.split_seed)
+    test_loader = load.dataloader(args.dataset, args.test_batch_size, evalset, args.workers, seed=args.split_seed)
 
     ## Model, Loss, Optimizer ##
     print('Creating {}-{} model.'.format(args.model_class, args.model))

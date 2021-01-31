@@ -45,7 +45,8 @@ def get_transform(size, padding, mean, std, preprocess):
     return transforms.Compose(transform)
 
 # train should be in ['train', 'val', 'trainval', 'test']
-def dataloader(dataset, batch_size, train, workers, corrupt_prob=0.0, length=None):
+# seed is if we want to generate a shuffled CIFAR-10
+def dataloader(dataset, batch_size, train, workers, corrupt_prob=0.0, length=None, seed=None):
     print("Which dataset?", train)
     # Dataset
     if dataset == 'mnist':
@@ -56,7 +57,7 @@ def dataloader(dataset, batch_size, train, workers, corrupt_prob=0.0, length=Non
         assert(train in ['train', 'val', 'trainval', 'test'])
         mean, std = (0.491, 0.482, 0.447), (0.247, 0.243, 0.262)
         transform = get_transform(size=32, padding=4, mean=mean, std=std, preprocess=(train in ['train', 'trainval']))
-        dataset = cifar.get_cifar_dataset(train, transform)
+        dataset = cifar.get_cifar_dataset(train, transform, seed=seed)
     if dataset == 'cifar100':
         mean, std = (0.507, 0.487, 0.441), (0.267, 0.256, 0.276)
         transform = get_transform(size=32, padding=4, mean=mean, std=std, preprocess=train)
